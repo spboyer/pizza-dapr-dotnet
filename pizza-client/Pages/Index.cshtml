@@ -1,0 +1,15 @@
+﻿@page
+@using pizza_client.Model
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+
+@foreach (var topping in (IEnumerable<Topping>)ViewData["Toppings"])
+    {
+        <p>@topping.name</p>
+    }
+
+</div>

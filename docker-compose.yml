@@ -1,0 +1,40 @@
+version: '3.4'
+
+services:
+  #redis:
+  #  image: redis:alpine
+
+  zipkin:
+    image: openzipkin/zipkin-slim
+    ports:
+      - "5411:9411"
+
+  pizza-client:
+    image: ${DOCKER_REGISTRY-}pizzaclient
+    build:
+      context: .
+      dockerfile: pizza-client/Dockerfile
+
+  pizza-client-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd", "-app-id", "pizza-client", "-app-port", "80", "-config", "/config/config.yaml"]
+    depends_on:
+      - pizza-client
+    network_mode: "service:pizza-client"
+    volumes:
+      - "./components/:/components"
+
+  toppings-api:
+    image: ${DOCKER_REGISTRY-}toppingsapi
+    build:
+      context: .
+      dockerfile: toppings-api/Dockerfile
+      
+  toppings-api-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd", "-app-id", "toppings-api", "-app-port", "80", "-config", "/components/config.yaml", "-components-path", "/components", "--dapr-grpc-port", "50001"]
+    depends_on:
+      - pizza-client
+    network_mode: "service:toppings-api"
+    volumes:
+      - "./components/:/components"
